@@ -51,12 +51,6 @@ function diffCoordinate(currValue::coordinate{Int64},
                              currValue.Lng - prevValue.Lng)
 end
 
-# Convert from decimal to binary number
-function toBinary(currValue::coordinate{Int64})
-    @show Base.bin(currValue.Lat)
-    return Base.bin(currValue.Lat)
-end
-
 # Left bitwise shift
 function leftShiftCoordinate(currValue::coordinate{Int64})::coordinate{Int64}
     return coordinate{Int64}(currValue.Lat << 1,
