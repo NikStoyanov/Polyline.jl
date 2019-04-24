@@ -66,17 +66,23 @@ end
 function convertToChar(currValue::coordinate{Int64})::coordinate{String}
 
     Lat::Int64 = currValue.Lat
+    Lng::Int64 = currValue.Lng
+
+    return coordinate{String}(encodeToChar(Lat), encodeToChar(Lng))
+end
+
+function encodeToChar(c::Int64)::String
     LatChars = Array{Char, 1}(undef, 1)
 
-    while Lat >= 0x20
-        CharMod = (0x20 | (Lat & 0x1f)) + 63
+    while c >= 0x20
+        CharMod = (0x20 | (c & 0x1f)) + 63
         append!(LatChars, Char(CharMod))
-        Lat = Lat >> 5
+        c = c >> 5
     end
 
-    append!(LatChars, Char(Lat + 63))
+    append!(LatChars, Char(c + 63))
 
-    return coordinate{String}(join(LatChars[2:end]), "~ps|U")
+    return join(LatChars[2:end])
 end
 
 #
