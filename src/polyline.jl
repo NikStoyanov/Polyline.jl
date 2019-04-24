@@ -57,11 +57,6 @@ function leftShiftCoordinate(currValue::coordinate{Int64})::coordinate{Int64}
                              currValue.Lng << 1)
 end
 
-function signCheckCoordinate(currValue::coordinate{Int64})::coordinate{Int64}
-
-    return currValue
-end
-
 # Convert the coordinates into ascii symbols
 function convertToChar(currValue::coordinate{Int64})::coordinate{String}
 
@@ -72,6 +67,11 @@ function convertToChar(currValue::coordinate{Int64})::coordinate{String}
 end
 
 function encodeToChar(c::Int64)::String
+    # invert negative value using two's complement
+    if c < 0
+        c = ~c
+    end
+
     LatChars = Array{Char, 1}(undef, 1)
 
     while c >= 0x20
@@ -92,8 +92,7 @@ function writePolyline(output::String, currValue::coordinate{Float64},
     roundCurrValue::coordinate{Int64} = roundCoordinate(currValue)
     diffCurrValue::coordinate{Int64} = diffCoordinate(roundCurrValue, prevValue)
     leftShift::coordinate{Int64} = leftShiftCoordinate(diffCurrValue)
-    signCurrValue::coordinate{Int64} = signCheckCoordinate(leftShift)
-    charCoordinate::coordinate{String} = convertToChar(signCurrValue)
+    charCoordinate::coordinate{String} = convertToChar(leftShift)
 end
 
 function transformPolyline(value, index)

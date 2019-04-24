@@ -20,6 +20,12 @@ end
                   polyline.coordinate{Int64}(3850000, -12020000)),
                   polyline.coordinate{Int64}(7700000, -24040000))
 
+    @test isequal(polyline.encodeToChar(7700000),
+                  "_p~iF")
+
+    @test isequal(polyline.encodeToChar(-24040000),
+                  "~ps|U")
+
     @test isequal(polyline.convertToChar(
                   polyline.coordinate{Int64}(7700000, -24040000)),
                   polyline.coordinate{String}("_p~iF", "~ps|U"))
