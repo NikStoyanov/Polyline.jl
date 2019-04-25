@@ -6,7 +6,8 @@ detailed in:
 https://developers.google.com/maps/documentation/utilities/polylinealgorithm
 
 Example:
-    >> encodePolyline([[50 100]; [51 101]])
+    julia> enc = encodePolyline([[38.5 -120.2]; [40.7 -120.95]; [43.252 -126.453]])
+    "_p~iF~ps|U_ulLnnqC_mqNvxq`@"
 
 Todo:
     * Add polyline decoding
@@ -70,7 +71,7 @@ function leftShiftCoordinate(currValue::coordinate{Int64})::coordinate{Int64}
                              currValue.Lng << 1)
 end
 
-function convertToChar(currValue::coordinate{Int64})::coordinate{String}
+function convertToChar(currValue::coordinate{Int64})::coordinate{Array{Char, 1}}
     #= Convert the coordinates into ascii symbols.
 
     Args:
@@ -83,10 +84,10 @@ function convertToChar(currValue::coordinate{Int64})::coordinate{String}
     Lat::Int64 = currValue.Lat
     Lng::Int64 = currValue.Lng
 
-    return coordinate{String}(encodeToChar(Lat), encodeToChar(Lng))
+    return coordinate{Array{Char, 1}}(encodeToChar(Lat), encodeToChar(Lng))
 end
 
-function encodeToChar(c::Int64)::String
+function encodeToChar(c::Int64)::Array{Char, 1}
     #= Perform the encoding of the character from a binary number to ASCII.
 
     Args:
@@ -120,27 +121,39 @@ function encodeToChar(c::Int64)::String
 
     # The return string holds a beginning character at the start
     # skip it and return the rest
-    return join(LatChars[2:end])
+    return LatChars[2:end]
 end
 
-function writePolyline!(output::String, currValue::coordinate{Float64},
-                       prevValue::coordinate{Int64})
+function writePolyline!(output::Array{Char, 1}, currValue::coordinate{Float64},
+                        prevValue::coordinate{Float64})
     #= Convert the given coordinate points in a polyline and mutate the output.
 
     Args:
-        output(String): Holds the resultant polyline.
+        output(Array{Char, 1}): Holds the resultant polyline.
         currValue(coordinate{Float64}): Current GPS data point.
         prevValue(coordinate{Float64}): Previous GPS data point.
 
     Returns:
-        output(String): Mutated output by adding the current addition to the
-                        polyline.
+        output(Array{Char, 1}): Mutate output by adding the current addition to the
+                                polyline.
     =#
 
+    # Transform GPS coordinates to Integers and round
     roundCurrValue::coordinate{Int64} = roundCoordinate(currValue)
-    diffCurrValue::coordinate{Int64} = diffCoordinate(roundCurrValue, prevValue)
+    roundPrevValue::coordinate{Int64} = roundCoordinate(prevValue)
+
+    # Get the difference from the previous GPS coordinated
+    diffCurrValue::coordinate{Int64} = diffCoordinate(roundCurrValue, roundPrevValue)
+
+    # Left shift the data points
     leftShift::coordinate{Int64} = leftShiftCoordinate(diffCurrValue)
-    charCoordinate::coordinate{String} = convertToChar(leftShift)
+
+    # Transform into ASCII
+    charCoordinate::coordinate{Array{Char, 1}} = convertToChar(leftShift)
+
+    # Add the characters to the polyline
+    append!(output, collect(charCoordinate.Lat))
+    append!(output, collect(charCoordinate.Lng))
 end
 
 function transformPolyline(value, index)
@@ -149,8 +162,33 @@ end
 function decodePolyline(expr; precision=5)
 end
 
-function encodePolyline(coord, precision=5)
-    factor::Int64 = 10^precision
+function encodePolyline(coord::Array{Float64}, precision::Int64=5)
+    #= Encodes an array of GPS coordinates to a polyline.
+
+    Args:
+        coord(Array{Float64, 1}(undef, 1)): GPS coordinates.
+        precision(Int16): Exponent for rounding the GPS coordinates.
+    Returns
+        String: Polyline encoded GPS coordinates.
+    =#
+
+    # Compute the rounding precision
+    factor::Float64 = 10. ^precision
+    coord = coord .* factor
+
+    output = Array{Char, 1}(undef, 1)
+
+    for c in range(1, stop=size(coord)[1])
+        if c == 1
+            writePolyline!(output, coordinate{Float64}(coord[c, 1], coord[c, 2]),
+                           coordinate{Float64}(0., 0.))
+        else
+            writePolyline!(output, coordinate{Float64}(coord[c, 1], coord[c, 2]),
+                           coordinate{Float64}(coord[c-1, 1], coord[c-1, 2]))
+        end
+    end
+
+    return join(output[2:end])
 end
 
 end # module

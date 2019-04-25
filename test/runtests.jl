@@ -21,12 +21,16 @@ end
                   polyline.coordinate{Int64}(7700000, -24040000))
 
     @test isequal(polyline.encodeToChar(7700000),
-                  "_p~iF")
+                  collect("_p~iF"))
 
     @test isequal(polyline.encodeToChar(-24040000),
-                  "~ps|U")
+                  collect("~ps|U"))
 
-    @test isequal(polyline.convertToChar(
-                  polyline.coordinate{Int64}(7700000, -24040000)),
-                  polyline.coordinate{String}("_p~iF", "~ps|U"))
+    conv = polyline.convertToChar(polyline.coordinate{Int64}(7700000, -24040000))
+    @test isequal(conv.Lat, collect("_p~iF"))
+    @test isequal(conv.Lng, collect("~ps|U"))
+
+    gps_coord = [[38.5 -120.2]; [40.7 -120.95]; [43.252 -126.453]]
+    @test isequal(encodePolyline(gps_coord),
+                  "_p~iF~ps|U_ulLnnqC_mqNvxq`@")
 end
