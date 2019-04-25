@@ -1,30 +1,17 @@
-# https://github.com/hicsail/polyline/blob/master/polyline/codec.py
-# 1.Take the initial signed value:
-#  -179.9832104
-# 2.Take the decimal value and multiply it by 1e5, rounding the result:
-#  -17998321
-# 3.Convert the decimal value to binary. Note that a negative value must be
-# calculated using its two's complement by inverting the binary value and
-# adding one to the result:
-#  00000001 00010010 10100001 11110001
-#  11111110 11101101 01011110 00001110
-#  11111110 11101101 01011110 00001111
-# 4.Left-shift the binary value one bit:
-#  11111101 11011010 10111100 00011110
-# 5.If the original decimal value is negative, invert this encoding:
-#  00000010 00100101 01000011 11100001
-# 6.Break the binary value out into 5-bit chunks (starting from the right hand side):
-#  00001 00010 01010 10000 11111 00001
-# 7. Place the 5-bit chunks into reverse order:
-#  00001 11111 10000 01010 00010 00001
-# 8.OR each value with 0x20 if another bit chunk follows:
-#  100001 111111 110000 101010 100010 000001
-# 9.Convert each value to decimal:
-#  33 63 48 42 34 1
-# 10.Add 63 to each value:
-#  96 126 111 105 97 64
-# 11.Convert each value to its ASCII equivalent:
-#  `~oia@
+#= Polyline encoder and decoder
+
+This module performes an encoding and decoding for
+gps coordinates into a polyline using the algorithm
+detailed in:
+https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+
+Example:
+    julia> enc = encodePolyline([[38.5 -120.2]; [40.7 -120.95]; [43.252 -126.453]])
+    "_p~iF~ps|U_ulLnnqC_mqNvxq`@"
+
+Todo:
+    * Add polyline decoding
+=#
 
 __precompile__()
 
@@ -32,68 +19,141 @@ module polyline
 
 export decodePolyline, encodePolyline
 
+# coodrinate is a type to represents a gps data point
 struct coordinate{T}
     Lat::T
     Lng::T
 end
 
-# Convert the coordinate to decimal and round
 function roundCoordinate(currValue::coordinate{Float64})::coordinate{Int64}
+    #= Convert the coordinate to an integer and round.
+
+    Args:
+        currValue (coordinate{Float64}): GPS data point as a real number.
+    Returs:
+        roundedValue (coordinate{Int64}): GPS data point as rounded integer.
+    =#
+
     roundedValue::coordinate = coordinate{Int64}(copysign(floor(abs(currValue.Lat)), currValue.Lat),
                                                  copysign(floor(abs(currValue.Lng)), currValue.Lng))
     return roundedValue
 end
 
-# Obtain the difference between consecutive coordinate points
 function diffCoordinate(currValue::coordinate{Int64},
                         prevValue::coordinate{Int64})::coordinate{Int64}
+    #= Polyline encoding only considers the difference between GPS data points
+    in order to reduce memory. diffCoordinate obtains the difference between
+    consecutive coordinate points.
+
+    Args:
+        currValue (coordinate{Int64}): The current GPS data point.
+        prevValue (coordinate{Int64}): The previous GPS data point. The count
+                                       starts from 0.
+    Returns:
+        coordinate{Int64}: The difference between the GPS data points.
+    =#
+
     return coordinate{Int64}(currValue.Lat - prevValue.Lat,
                              currValue.Lng - prevValue.Lng)
 end
 
-# Convert from decimal to binary number
-function toBinary(currValue::coordinate{Int64})
-    @show Base.bin(currValue.Lat)
-    return Base.bin(currValue.Lat)
-end
-
-# Left bitwise shift
 function leftShiftCoordinate(currValue::coordinate{Int64})::coordinate{Int64}
+    #= Left bitwise shift to leave space for a sign bit as the right most bit.
+
+    Args:
+        currValue(coordinate{Int64}): The difference between the last two
+                                      consecutive GPS data points.
+    Returns:
+        coordinate{Int64}: Left bitwise shifted values.
+    =#
+
     return coordinate{Int64}(currValue.Lat << 1,
                              currValue.Lng << 1)
 end
 
-function signCheckCoordinate(currValue::coordinate{Int64})::coordinate{Int64}
+function convertToChar(currValue::coordinate{Int64})::coordinate{Array{Char, 1}}
+    #= Convert the coordinates into ascii symbols.
 
-    return currValue
-end
+    Args:
+        currValue(coordinate{Int64}): Integer GPS coordinates.
 
-# Convert the coordinates into ascii symbols
-function convertToChar(currValue::coordinate{Int64})::coordinate{String}
+    Returns:
+        coordinate{String}: GPS coordinates as ASCII characters.
+    =#
 
     Lat::Int64 = currValue.Lat
-    LatChars = Array{Char, 1}(undef, 1)
+    Lng::Int64 = currValue.Lng
 
-    while Lat >= 0x20
-        CharMod = (0x20 | (Lat & 0x1f)) + 63
-        append!(LatChars, Char(CharMod))
-        Lat = Lat >> 5
-    end
-
-    append!(LatChars, Char(Lat + 63))
-
-    return coordinate{String}(join(LatChars[2:end]), "~ps|U")
+    return coordinate{Array{Char, 1}}(encodeToChar(Lat), encodeToChar(Lng))
 end
 
-#
-function writePolyline(output::String, currValue::coordinate{Float64},
-                       prevValue::coordinate{Int64})
+function encodeToChar(c::Int64)::Array{Char, 1}
+    #= Perform the encoding of the character from a binary number to ASCII.
 
+    Args:
+        c(Int64): GPS coordinate.
+
+    Returns:
+        String: ASCII characters of the polyline.
+    =#
+
+    LatChars = Array{Char, 1}(undef, 1)
+
+    # Invert a negative coordinate using two's complement
+    if c < 0
+        c = ~c
+    end
+
+    # Add a continuation bit at the LHS for non-last chunks using OR 0x20
+    # (0x20 = 100000)
+    while c >= 0x20
+        # Get the last 5 bits (0x1f)
+        # Add 63 (in order to get "better" looking polyline characters in ASCII)
+        CharMod = (0x20 | (c & 0x1f)) + 63
+        append!(LatChars, Char(CharMod))
+
+        # Shift 5 bits
+        c = c >> 5
+    end
+
+    # Modify the last chunk
+    append!(LatChars, Char(c + 63))
+
+    # The return string holds a beginning character at the start
+    # skip it and return the rest
+    return LatChars[2:end]
+end
+
+function writePolyline!(output::Array{Char, 1}, currValue::coordinate{Float64},
+                        prevValue::coordinate{Float64})
+    #= Convert the given coordinate points in a polyline and mutate the output.
+
+    Args:
+        output(Array{Char, 1}): Holds the resultant polyline.
+        currValue(coordinate{Float64}): Current GPS data point.
+        prevValue(coordinate{Float64}): Previous GPS data point.
+
+    Returns:
+        output(Array{Char, 1}): Mutate output by adding the current addition to the
+                                polyline.
+    =#
+
+    # Transform GPS coordinates to Integers and round
     roundCurrValue::coordinate{Int64} = roundCoordinate(currValue)
-    diffCurrValue::coordinate{Int64} = diffCoordinate(roundCurrValue, prevValue)
+    roundPrevValue::coordinate{Int64} = roundCoordinate(prevValue)
+
+    # Get the difference from the previous GPS coordinated
+    diffCurrValue::coordinate{Int64} = diffCoordinate(roundCurrValue, roundPrevValue)
+
+    # Left shift the data points
     leftShift::coordinate{Int64} = leftShiftCoordinate(diffCurrValue)
-    signCurrValue::coordinate{Int64} = signCheckCoordinate(leftShift)
-    charCoordinate::coordinate{String} = convertToChar(signCurrValue)
+
+    # Transform into ASCII
+    charCoordinate::coordinate{Array{Char, 1}} = convertToChar(leftShift)
+
+    # Add the characters to the polyline
+    append!(output, collect(charCoordinate.Lat))
+    append!(output, collect(charCoordinate.Lng))
 end
 
 function transformPolyline(value, index)
@@ -102,8 +162,33 @@ end
 function decodePolyline(expr; precision=5)
 end
 
-function encodePolyline(coord, precision=5)
-    factor::Int64 = 10^precision
+function encodePolyline(coord::Array{Float64}, precision::Int64=5)
+    #= Encodes an array of GPS coordinates to a polyline.
+
+    Args:
+        coord(Array{Float64, 1}(undef, 1)): GPS coordinates.
+        precision(Int16): Exponent for rounding the GPS coordinates.
+    Returns
+        String: Polyline encoded GPS coordinates.
+    =#
+
+    # Compute the rounding precision
+    factor::Float64 = 10. ^precision
+    coord = coord .* factor
+
+    output = Array{Char, 1}(undef, 1)
+
+    for c in range(1, stop=size(coord)[1])
+        if c == 1
+            writePolyline!(output, coordinate{Float64}(coord[c, 1], coord[c, 2]),
+                           coordinate{Float64}(0., 0.))
+        else
+            writePolyline!(output, coordinate{Float64}(coord[c, 1], coord[c, 2]),
+                           coordinate{Float64}(coord[c-1, 1], coord[c-1, 2]))
+        end
+    end
+
+    return join(output[2:end])
 end
 
 end # module
