@@ -1,4 +1,4 @@
-# polyline.jl
+# Polyline.jl
 
 [![Build Status](https://travis-ci.com/NikStoyanov/polyline.jl.svg?branch=master)](https://travis-ci.com/NikStoyanov/polyline.jl)
 [![codecov](https://codecov.io/gh/NikStoyanov/polyline.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/NikStoyanov/polyline.jl)

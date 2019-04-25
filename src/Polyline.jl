@@ -15,7 +15,7 @@ Todo:
 
 __precompile__()
 
-module polyline
+module Polyline
 
 export decodePolyline, encodePolyline
 
