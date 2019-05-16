@@ -3,6 +3,9 @@ uuid = "737ade88-6689-11e9-2266-a1567ed38d42"
 authors = ["Nikola Stoyanov <nstoyanov.92@gmail.com>"]
 version = "0.1.0"
 
+[deps]
+LightXML = "9c8b4983-aa76-5018-a973-4c85ecc9e179"
+
 [compat]
 julia = "1.0"
 

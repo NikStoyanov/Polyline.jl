@@ -27,5 +27,6 @@ end
 
 include("encode.jl")
 include("decode.jl")
+include("loadGPX.jl")
 
 end # module
