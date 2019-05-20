@@ -1,22 +1,19 @@
 using HTTP
+using Images
 
-function envVar()
-    return run(`echo $(ENV["GOOGLE_MAPS_API"])`)
-end
-
-function mapsURL(path::String; type="terrain", size=800, scale=2)
+function mapsURL(path::String; type="terrain", token::String=ENV["GOOGLE_MAPS_API"],
+                 size=800, scale=2, mapMarkersStart="", mapMarkersEnd="")
     mapURL = "https://maps.googleapis.com/maps/api/staticmap?maptype="
     mapType = type
-    mapPath = "&path=enc:" & path & "&"
-    mapKey = envVar()
-    mapSize = "&$size" * "x$size" * "&"
-    mapScale = "scale=" & scale & "&"
-    mapMarkersStart = "color:yellow|label:S|53.47101,-2.26714&"
-    mapMarkersEnd = "color:green|label:F|53.47058000000003,-2.2645999999999984"
+    mapPath = "&path=enc:" * path * "&"
+    mapKey = "key=$token" * "&"
+    mapSize = "size=$size" * "x$size" * "&"
+    mapScale = "scale=$scale" * "&"
+
+    return mapURL * mapType * mapPath * mapKey * mapSize * mapScale *
+           mapMarkersStart * mapMarkersEnd
 end
 
-function getImage(url::String)
-    r = HTTP.request("GET", url)
-    println(r.status)
-    println(String(r.body))
+function getMapImage(URL::String; pathFig="/tmp/polyline.png")
+    download(mapsURL(URL), pathFig)
 end
