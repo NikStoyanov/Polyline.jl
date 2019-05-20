@@ -1,5 +1,4 @@
 using HTTP
-using Images
 
 function mapsURL(path::String; type="terrain", token::String=ENV["GOOGLE_MAPS_API"],
                  size=800, scale=2, mapMarkersStart="", mapMarkersEnd="")
