@@ -1,7 +1,7 @@
 #= Polyline encoder and decoder
 
 This module performes an encoding and decoding for
-gps coordinates into a polyline using the algorithm
+GPS coordinates into a polyline using the algorithm
 detailed in:
 https://developers.google.com/maps/documentation/utilities/polylinealgorithm
 
@@ -20,7 +20,7 @@ module Polyline
 
 export decodePolyline, encodePolyline
 
-# coodrinate is a type to represents a gps data point
+# coordinate is a type to represent a GPS data point
 struct coordinate{T}
     Lat::T
     Lng::T
