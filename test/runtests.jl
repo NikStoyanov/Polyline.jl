@@ -36,6 +36,10 @@ end
                   "_p~iF~ps|U_ulLnnqC_mqNvxq`@")
 end
 
+@testset "Decode polyline" begin
+	@test decodePolyline("_p~iF~ps|U_ulLnnqC_mqNvxq`@") ≈ [[38.5 -120.2]; [40.7 -120.95]; [43.252 -126.453]]   atol=1e-7
+end
+
 @testset "Read GPX" begin
     gpxFile = """
     <?xml version="1.0" encoding="UTF-8"?>
