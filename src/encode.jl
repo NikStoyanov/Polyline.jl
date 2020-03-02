@@ -4,7 +4,7 @@ function encodePolyline(coord::Array{Float64}, precision::Int64=5)
     Args:
         coord(Array{Float64, 1}(undef, 1)): GPS coordinates.
         precision(Int16): Exponent for rounding the GPS coordinates.
-    Returns
+    Returns:
         String: Polyline encoded GPS coordinates.
     =#
 
@@ -101,7 +101,7 @@ function roundCoordinate(currValue::coordinate{Float64})::coordinate{Int64}
 
     Args:
         currValue (coordinate{Float64}): GPS data point as a real number.
-    Returs:
+    Returns:
         roundedValue (coordinate{Int64}): GPS data point as rounded integer.
     =#
 
