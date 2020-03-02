@@ -18,6 +18,8 @@ __precompile__()
 
 module Polyline
 
+using HTTP
+
 export decodePolyline, encodePolyline
 
 # coordinate is a type to represent a GPS data point
@@ -29,5 +31,6 @@ end
 include("encode.jl")
 include("decode.jl")
 include("loadGPX.jl")
+include("googleMaps.jl")
 
 end # module

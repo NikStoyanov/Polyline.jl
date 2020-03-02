@@ -1,5 +1,3 @@
-using HTTP
-
 function mapsURL(path::String; type="terrain", token::String=ENV["GOOGLE_MAPS_API"],
                  size=800, scale=2, mapMarkersStart="", mapMarkersEnd="")
     mapURL = "https://maps.googleapis.com/maps/api/staticmap?maptype="
