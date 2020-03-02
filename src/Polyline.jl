@@ -18,7 +18,7 @@ __precompile__()
 
 module Polyline
 
-export decodePolyline, encodePolyline
+using HTTP
 
 # coordinate is a type to represent a GPS data point
 struct coordinate{T}
@@ -29,5 +29,8 @@ end
 include("encode.jl")
 include("decode.jl")
 include("loadGPX.jl")
+include("googleMaps.jl")
+
+export decodePolyline, encodePolyline, getMapImage, mapsURL
 
 end # module

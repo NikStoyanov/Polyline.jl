@@ -80,3 +80,9 @@ end
 
     @test gpxRoute ≈ parseGPX(xDoc) atol=0.0001
 end
+
+@testset "Google maps image" begin
+    @test mapsURL(";_p~iF~ps|U_ulLnnqC_mqNvxq`@", type="terrain", token="aa",
+                 size=1000, scale=1, mapMarkersStart="bb", mapMarkersEnd="cc") ==
+    "https://maps.googleapis.com/maps/api/staticmap?maptype=terrain&path=enc:;_p~iF~ps|U_ulLnnqC_mqNvxq`@&key=aa&size=1000x1000&scale=1&bbcc"
+end
