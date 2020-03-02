@@ -1,7 +1,7 @@
 name = "Polyline"
 uuid = "737ade88-6689-11e9-2266-a1567ed38d42"
 authors = ["Nikola Stoyanov <nstoyanov.92@gmail.com>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
