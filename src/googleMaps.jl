@@ -12,5 +12,5 @@ function mapsURL(path::String; type="terrain", token::String=ENV["GOOGLE_MAPS_AP
 end
 
 function getMapImage(URL::String; pathFig="/tmp/polyline.png")
-    download(mapsURL(URL), pathFig)
+    download(URL, pathFig)
 end

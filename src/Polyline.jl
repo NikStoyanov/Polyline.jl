@@ -20,8 +20,6 @@ module Polyline
 
 using HTTP
 
-export decodePolyline, encodePolyline
-
 # coordinate is a type to represent a GPS data point
 struct coordinate{T}
     Lat::T
@@ -32,5 +30,7 @@ include("encode.jl")
 include("decode.jl")
 include("loadGPX.jl")
 include("googleMaps.jl")
+
+export decodePolyline, encodePolyline, getMapImage, mapsURL
 
 end # module
