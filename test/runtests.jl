@@ -82,7 +82,7 @@ end
 end
 
 @testset "Google maps image" begin
-    @test mapsURL(";_p~iF~ps|U_ulLnnqC_mqNvxq`@", type="terrain", token="aa",
-                 size=1000, scale=1, mapMarkersStart="bb", mapMarkersEnd="cc") ==
-    "https://maps.googleapis.com/maps/api/staticmap?maptype=terrain&path=enc:;_p~iF~ps|U_ulLnnqC_mqNvxq`@&key=aa&size=1000x1000&scale=1&bbcc"
+    @test mapsURL(";_p~iF~ps|U_ulLnnqC_mqNvxq`@"; token="aa", type="terrain",
+                 size=1000, scale=1, MarkersStart=(1.0, 1.0), MarkersEnd=(2.0,2.0)) ==
+    "https://maps.googleapis.com/maps/api/staticmap?maptype=terrain&path=enc:;_p~iF~ps|U_ulLnnqC_mqNvxq`@&key=aa&size=1000x1000&scale=1&markers=color:yellow|label:S|1.0,1.0&markers=color:green|label:F|2.0,2.0"
 end
